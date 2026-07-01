@@ -56,16 +56,24 @@ app.post('/api/vehiculos/consulta', async (req, res) => {
     if (vehiculoRows.length > 0) {
       const v = vehiculoRows[0];
       
-      // Mapeamos los datos para que coincidan con la estructura que espera el Frontend
+      // SALVAVIDAS: Si tipo_impedimento es nulo (no tiene robos), le ponemos "SIN IMPEDIMENTOS"
+      const estadoImpedimento = v.tipo_impedimento || 'SIN IMPEDIMENTOS';
+      
+      // Mapeamos TODOS los datos (incluidos los nuevos) para el Frontend
       resultadoConsulta = {
         encontrado: true,
-        estado: v.tipo_impedimento === 'SIN IMPEDIMENTOS' ? 'verde' : 'rojo',
-        titulo: v.tipo_impedimento,
+        estado: estadoImpedimento === 'SIN IMPEDIMENTOS' ? 'verde' : 'rojo',
+        titulo: estadoImpedimento,
         marca: v.marca,
         modelo: v.modelo,
         anio: v.anio,
         tipo: v.tipo,
-        icono: v.tipo_impedimento === 'SIN IMPEDIMENTOS' ? '✔️' : '⚠️'
+        color: v.color,
+        titular_nombre: v.titular_nombre,
+        titular_dni: v.titular_dni,
+        numero_chasis: v.numero_chasis,
+        numero_motor: v.numero_motor,
+        icono: estadoImpedimento === 'SIN IMPEDIMENTOS' ? '✔️' : '⚠️'
       };
     } else {
       // Si el vehículo no figura en el registro general
