@@ -1,0 +1,102 @@
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import db from './db.js';
+
+dotenv.config();
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Middlewares
+app.use(cors());
+app.use(express.json()); // Permite recibir datos en formato JSON
+
+// --- ENDPOINT: INICIO DE SESIÓN ---
+app.post('/api/login', async (req, res) => {
+  const { usuario, password } = req.body;
+
+  try {
+    // Buscamos el usuario en la base de datos
+    const [rows] = await db.query(
+      'SELECT id, usuario, nombre_completo, rol FROM usuarios WHERE usuario = ? AND password = ?',
+      [usuario, password]
+    );
+
+    if (rows.length > 0) {
+      // Login exitoso: devolvemos los datos del agente (menos la contraseña)
+      res.json({ loginExitoso: true, usuario: rows[0] });
+    } else {
+      res.status(401).json({ loginExitoso: false, mensaje: 'Credenciales inválidas' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ mensaje: 'Error en el servidor al intentar loguear' });
+  }
+});
+
+// --- ENDPOINT: CONSULTA DE DOMINIO ---
+app.post('/api/vehiculos/consulta', async (req, res) => {
+  const { dominio, usuarioId } = req.body; // Recibimos el dominio y el ID del agente que busca
+
+  try {
+    const patenteLimpia = dominio.replace(/\s+/g, '').toUpperCase();
+
+    // 1. Buscamos el vehículo y su impedimento activo haciendo un JOIN
+    const [vehiculoRows] = await db.query(
+      `SELECT v.id, v.dominio, v.marca, v.modelo, v.anio, v.tipo, i.tipo_impedimento, i.detalle 
+       FROM vehiculos v
+       LEFT JOIN impedimentos i ON v.id = i.vehiculo_id AND i.activo = true
+       WHERE v.dominio = ?`,
+      [patenteLimpia]
+    );
+
+    let resultadoConsulta = {};
+
+    if (vehiculoRows.length > 0) {
+      const v = vehiculoRows[0];
+      
+      // Mapeamos los datos para que coincidan con la estructura que espera el Frontend
+      resultadoConsulta = {
+        encontrado: true,
+        estado: v.tipo_impedimento === 'SIN IMPEDIMENTOS' ? 'verde' : 'rojo',
+        titulo: v.tipo_impedimento,
+        marca: v.marca,
+        modelo: v.modelo,
+        anio: v.anio,
+        tipo: v.tipo,
+        icono: v.tipo_impedimento === 'SIN IMPEDIMENTOS' ? '✔️' : '⚠️'
+      };
+    } else {
+      // Si el vehículo no figura en el registro general
+      resultadoConsulta = {
+        encontrado: false,
+        estado: 'gris',
+        titulo: 'SIN REGISTRO EN SISTEMA',
+        marca: 'Desconocida',
+        modelo: 'No identificado',
+        anio: '-',
+        tipo: '-',
+        icono: '❓'
+      };
+    }
+
+    // 2. AUDITORÍA OBLIGATORIA: Guardamos el registro de quién consultó esta patente
+    await db.query(
+      'INSERT INTO historial_consultas (dominio_consultado, estado_resultado, usuario_id) VALUES (?, ?, ?)',
+      [patenteLimpia, resultadoConsulta.titulo, usuarioId]
+    );
+
+    // Devolvemos el resultado al frontend
+    res.json(resultadoConsulta);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ mensaje: 'Error al procesar la consulta operativa' });
+  }
+});
+
+// Levantar el servidor
+app.listen(PORT, () => {
+  console.log(`Servidor SCIP corriendo en el puerto ${PORT}`);
+});
