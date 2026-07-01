@@ -44,8 +44,8 @@ app.post('/api/vehiculos/consulta', async (req, res) => {
 
     // 1. Buscamos el vehículo y su impedimento activo haciendo un JOIN
     const [vehiculoRows] = await db.query(
-      `SELECT v.id, v.dominio, v.marca, v.modelo, v.anio, v.tipo, i.tipo_impedimento, i.detalle 
-       FROM vehiculos v
+      `SELECT v.id, v.dominio, v.marca, v.modelo, v.anio, v.tipo, v.numero_chasis, v.numero_motor, v.color, v.titular_nombre, v.titular_dni, i.tipo_impedimento, i.detalle 
+    FROM vehiculos v
        LEFT JOIN impedimentos i ON v.id = i.vehiculo_id AND i.activo = true
        WHERE v.dominio = ?`,
       [patenteLimpia]
