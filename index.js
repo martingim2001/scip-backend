@@ -103,6 +103,20 @@ app.post('/api/vehiculos/consulta', async (req, res) => {
     res.status(500).json({ mensaje: 'Error al procesar la consulta operativa' });
   }
 });
+// --- ENDPOINT: TRAER TODOS LOS VEHÍCULOS (PARA IMPRESIÓN MASIVA) ---
+app.get('/api/vehiculos/todos', async (req, res) => {
+  try {
+    const [vehiculos] = await db.query(
+      `SELECT v.*, i.tipo_impedimento 
+       FROM vehiculos v 
+       LEFT JOIN impedimentos i ON v.id = i.vehiculo_id AND i.activo = true`
+    );
+    res.json(vehiculos);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ mensaje: 'Error al obtener el listado masivo' });
+  }
+});
 
 // Levantar el servidor
 app.listen(PORT, () => {
