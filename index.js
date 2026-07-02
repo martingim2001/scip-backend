@@ -122,3 +122,21 @@ app.get('/api/vehiculos/todos', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Servidor SCIP corriendo en el puerto ${PORT}`);
 });
+// --- ENDPOINT: BUSCAR PERSONA POR DNI (PEDIDO DE CAPTURA) ---
+app.get('/api/personas/:dni', async (req, res) => {
+  const { dni } = req.params;
+  try {
+    const [rows] = await db.query('SELECT * FROM personas WHERE dni = ?', [dni]);
+    
+    if (rows.length === 0) {
+      // Si no existe en el registro policial
+      return res.status(404).json({ mensaje: 'Ciudadano no registrado en el sistema' });
+    }
+    
+    // Devolvemos los datos completos (incluyendo si tiene captura o no)
+    res.json(rows[0]);
+  } catch (error) {
+    console.error("Error al buscar persona:", error);
+    res.status(500).json({ mensaje: 'Error interno del servidor' });
+  }
+});
