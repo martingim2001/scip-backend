@@ -118,6 +118,26 @@ app.get('/api/vehiculos/todos', async (req, res) => {
   }
 });
 
+// --- ENDPOINT: BÚSQUEDA DE PERSONAS POR DNI ---
+app.get('/api/personas/:dni', async (req, res) => {
+  const { dni } = req.params;
+
+  try {
+    const [rows] = await db.query('SELECT * FROM personas WHERE dni = ?', [dni]);
+
+    if (rows.length > 0) {
+      // Si encuentra a la persona, manda los datos
+      res.json(rows[0]); 
+    } else {
+      // Si no existe en la base de datos
+      res.status(404).json({ mensaje: 'Persona no encontrada en los registros' });
+    }
+  } catch (error) {
+    console.error("Error buscando persona:", error);
+    res.status(500).json({ mensaje: 'Error interno del servidor' });
+  }
+});
+
 // Levantar el servidor
 app.listen(PORT, () => {
   console.log(`Servidor SCIP corriendo en el puerto ${PORT}`);
