@@ -118,23 +118,23 @@ app.get('/api/vehiculos/todos', async (req, res) => {
   }
 });
 
-// --- ENDPOINT: BÚSQUEDA DE PERSONAS POR DNI ---
+// --- ENDPOINT: BUSCAR PERSONA POR DNI ---
 app.get('/api/personas/:dni', async (req, res) => {
-  const { dni } = req.params;
-
   try {
-    const [rows] = await db.query('SELECT * FROM personas WHERE dni = ?', [dni]);
+    const dniBuscado = req.params.dni;
+    const [resultados] = await db.query(
+      'SELECT * FROM personas WHERE dni = ?',
+      [dniBuscado]
+    );
 
-    if (rows.length > 0) {
-      // Si encuentra a la persona, manda los datos
-      res.json(rows[0]); 
+    if (resultados.length > 0) {
+      res.json(resultados[0]); // Mandamos los datos de la persona al frontend
     } else {
-      // Si no existe en la base de datos
-      res.status(404).json({ mensaje: 'Persona no encontrada en los registros' });
+      res.status(404).json({ mensaje: 'No se encontraron registros para este DNI.' });
     }
   } catch (error) {
     console.error("Error buscando persona:", error);
-    res.status(500).json({ mensaje: 'Error interno del servidor' });
+    res.status(500).json({ mensaje: 'Error interno del servidor.' });
   }
 });
 
