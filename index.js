@@ -160,3 +160,19 @@ app.get('/api/personas/:dni', async (req, res) => {
     res.status(500).json({ mensaje: 'Error interno del servidor' });
   }
 });
+// --- ENDPOINT: TRAER HISTORIAL DE CONSULTAS ---
+app.get('/api/historial', async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT h.id, h.fecha_hora, h.dominio_consultado, h.estado_resultado, u.nombre_completo AS operador
+      FROM historial_consultas h
+      JOIN usuarios u ON h.usuario_id = u.id
+      ORDER BY h.fecha_hora DESC
+      LIMIT 15
+    `);
+    res.json(rows);
+  } catch (error) {
+    console.error("Error al obtener historial:", error);
+    res.status(500).json({ mensaje: 'Error interno del servidor' });
+  }
+});
