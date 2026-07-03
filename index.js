@@ -168,7 +168,7 @@ app.get('/api/historial', async (req, res) => {
       FROM historial_consultas h
       JOIN usuarios u ON h.usuario_id = u.id
       ORDER BY h.fecha_hora DESC
-      LIMIT 15
+      LIMIT 5
     `);
     res.json(rows);
   } catch (error) {
