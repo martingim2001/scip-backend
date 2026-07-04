@@ -142,6 +142,16 @@ app.get('/api/personas/:dni', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Servidor SCIP corriendo en el puerto ${PORT}`);
 });
+// --- ENDPOINT: LISTADO GENERAL DE PERSONAS ---
+app.get('/api/personas', async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT * FROM personas');
+    res.json(rows);
+  } catch (error) {
+    console.error('Error al obtener el listado:', error);
+    res.status(500).json({ mensaje: 'Error al obtener el listado de personas' });
+  }
+});
 // --- ENDPOINT: BUSCAR PERSONA POR DNI (PEDIDO DE CAPTURA) ---
 app.get('/api/personas/:dni', async (req, res) => {
   const { dni } = req.params;
