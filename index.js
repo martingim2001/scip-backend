@@ -186,3 +186,14 @@ app.get('/api/historial', async (req, res) => {
     res.status(500).json({ mensaje: 'Error interno del servidor' });
   }
 });
+// --- ENDPOINT: LISTADO GENERAL DE VEHÍCULOS ---
+app.get('/api/vehiculos', async (req, res) => {
+  try {
+    // Si tu tabla en MySQL se llama distinto (ej: 'autos' o 'registro_vehiculos'), cambialo acá
+    const [rows] = await db.query('SELECT * FROM vehiculos');
+    res.json(rows);
+  } catch (error) {
+    console.error('Error al obtener el listado de vehiculos:', error);
+    res.status(500).json({ mensaje: 'Error al obtener el listado de vehículos' });
+  }
+});
